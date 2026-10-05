@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Teachinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=PT+Sans:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="page">
+
+  <header class="header" id="top">
+    <a href="#top" class="logo">Teachinder</a>
+    <form class="search" role="search" onsubmit="return false">
+      <input type="search" class="search__input" placeholder="Name, note or age to search" aria-label="Search">
+      <button type="submit" class="btn btn--small">Search</button>
+    </form>
+  </header>
+
+  <nav class="nav clearfix" aria-label="Main">
+    <ul class="nav__list">
+      <li><a href="#teachers">Teachers</a></li>
+      <li><a href="#statistics">Statistics</a></li>
+      <li><a href="#favorites">Favorites</a></li>
+      <li><a href="#about">About</a></li>
+    </ul>
+    <button type="button" class="btn nav__add" data-open="add-dialog">Add teacher</button>
+  </nav>
+
+  <main>
+    <section class="section" id="teachers">
+      <h2 class="section__title">Top Teachers</h2>
+
+      <form class="filters">
+        <div class="filters__group">
+          <label for="f-age">Age</label>
+          <select id="f-age"><option>18-31</option><option>32-45</option><option>46+</option></select>
+        </div>
+        <div class="filters__group">
+          <label for="f-region">Region</label>
+          <select id="f-region"><option>Europe</option><option>Asia</option><option>America</option></select>
+        </div>
+        <div class="filters__group">
+          <label for="f-sex">Sex</label>
+          <select id="f-sex"><option>Male</option><option>Female</option></select>
+        </div>
+        <label class="filters__group filters__check"><input type="checkbox"> Only with photo</label>
+        <label class="filters__group filters__check"><input type="checkbox"> Only favorites</label>
+      </form>
+
+      <ul class="teachers">
+        <li class="teacher teacher--fav">
+          <button class="teacher__btn" data-open="info-dialog">
+            <span class="avatar"><img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Ihor Tkachuk"></span>
+            <span class="teacher__name">Ihor<br>Tkachuk</span>
+            <span class="teacher__subject">Chemistry</span>
+            <span class="teacher__country">Ukraine</span>
+          </button>
+        </li>
+        <li class="teacher">
+          <button class="teacher__btn" data-open="info-dialog">
+            <span class="avatar"><img src="https://randomuser.me/api/portraits/men/75.jpg" alt="Pragg Rameshbabu"></span>
+            <span class="teacher__name">Pragg<br>Rameshbabu</span>
+            <span class="teacher__subject">Chess</span>
+            <span class="teacher__country">India</span>
+          </button>
+        </li>
+        <li class="teacher teacher--fav">
+          <button class="teacher__btn" data-open="info-dialog">
+            <span class="avatar"><img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Floor Jansen"></span>
+            <span class="teacher__name">Floor<br>Jansen</span>
+            <span class="teacher__subject">Vocal</span>
+            <span class="teacher__country">Denmark</span>
+          </button>
+        </li>
+        <li class="teacher">
+          <button class="teacher__btn" data-open="info-dialog">
+            <span class="avatar"><img src="https://randomuser.me/api/portraits/men/22.jpg" alt="John Burke"></span>
+            <span class="teacher__name">John<br>Burke</span>
+            <span class="teacher__subject">Computer Science</span>
+            <span class="teacher__country">Belgium</span>
+          </button>
+        </li>
+        <li class="teacher teacher--fav">
+          <button class="teacher__btn" data-open="info-dialog">
+            <span class="avatar"><img src="https://randomuser.me/api/portraits/women/65.jpg" alt="Ari Tang"></span>
+            <span class="teacher__name">Ari<br>Tang</span>
+            <span class="teacher__subject">Biology</span>
+            <span class="teacher__country">China</span>
+          </button>
+        </li>
+        <li class="teacher">
+          <button class="teacher__btn" data-open="info-dialog">
+            <span class="avatar"><img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Rachel Andrew"></span>
+            <span class="teacher__name">Rachel<br>Andrew</span>
+            <span class="teacher__subject">Medicine</span>
+            <span class="teacher__country">UK</span>
+          </button>
+        </li>
+        <li class="teacher">
+          <button class="teacher__btn" data-open="info-dialog">
+            <span class="avatar"><span class="avatar__initials">A.M</span></span>
+            <span class="teacher__name">Anna<br>Muzychuk</span>
+            <span class="teacher__subject">Chess</span>
+            <span class="teacher__country">Belarus</span>
+          </button>
+        </li>
+        <li class="teacher">
+          <button class="teacher__btn" data-open="info-dialog">
+            <span class="avatar"><span class="avatar__initials">R.L</span></span>
+            <span class="teacher__name">Radoslaw<br>Ljuboevic</span>
+            <span class="teacher__subject">Physics</span>
+            <span class="teacher__country">Poland</span>
+          </button>
+        </li>
+      </ul>
+    </section>
+
+    <section class="section" id="statistics">
+      <h2 class="section__title">Statistics</h2>
+
+      <div class="table-wrap">
+        <table class="stats">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Speciality</th>
+              <th scope="col">Age</th>
+              <th scope="col">Gender</th>
+              <th scope="col">Nationality</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Daisy Alexander</td><td>Chemistry</td><td>28</td><td>Female</td><td>Vietnam</td></tr>
+            <tr><td>Julia Bradley</td><td>Math</td><td>26</td><td>Female</td><td>USA</td></tr>
+            <tr><td>Rita Hart</td><td>Art</td><td>41</td><td>Female</td><td>Ireland</td></tr>
+            <tr><td>Jonathan Jacobs</td><td>Math</td><td>32</td><td>Male</td><td>England</td></tr>
+            <tr><td>Nathaniel White</td><td>Computer Science</td><td>37</td><td>Male</td><td>Austria</td></tr>
+            <tr><td>Frank Medina</td><td>English</td><td>43</td><td>Male</td><td>Italy</td></tr>
+            <tr><td>Ella Curtis</td><td>Chess</td><td>34</td><td>Female</td><td>USA</td></tr>
+            <tr><td>Claire Simmmons</td><td>Art</td><td>38</td><td>Female</td><td>Netherlands</td></tr>
+            <tr><td>Benjamin Knight</td><td>Biology</td><td>44</td><td>Male</td><td>Scotland</td></tr>
+            <tr><td>Norma Rose</td><td>Statistics</td><td>36</td><td>Female</td><td>France</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ul class="pagination">
+        <li><span class="pagination__current">1</span></li>
+        <li><a href="#statistics">2</a></li>
+        <li><a href="#statistics">3</a></li>
+        <li><span>...</span></li>
+        <li><a href="#statistics">Last</a></li>
+      </ul>
+    </section>
+
+    <section class="section" id="favorites">
+      <h2 class="section__title">Favorites</h2>
+
+      <div class="carousel">
+        <button type="button" class="carousel__arrow carousel__arrow--prev" aria-label="Previous"></button>
+        <ul class="carousel__track">
+          <li class="teacher">
+            <button class="teacher__btn" data-open="info-dialog">
+              <span class="avatar"><img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Ihor Tkachuk"></span>
+              <span class="teacher__name">Ihor<br>Tkachuk</span>
+              <span class="teacher__country">Ukraine</span>
+            </button>
+          </li>
+          <li class="teacher">
+            <button class="teacher__btn" data-open="info-dialog">
+              <span class="avatar"><span class="avatar__initials">A.M</span></span>
+              <span class="teacher__name">Anna<br>Makarevich</span>
+              <span class="teacher__country">Belarus</span>
+            </button>
+          </li>
+          <li class="teacher">
+            <button class="teacher__btn" data-open="info-dialog">
+              <span class="avatar"><img src="https://randomuser.me/api/portraits/men/22.jpg" alt="John Burke"></span>
+              <span class="teacher__name">John<br>Burke</span>
+              <span class="teacher__country">Belgium</span>
+            </button>
+          </li>
+          <li class="teacher">
+            <button class="teacher__btn" data-open="info-dialog">
+              <span class="avatar"><img src="https://randomuser.me/api/portraits/women/65.jpg" alt="Ari Tang"></span>
+              <span class="teacher__name">Ari<br>Tang</span>
+              <span class="teacher__country">China</span>
+            </button>
+          </li>
+          <li class="teacher">
+            <button class="teacher__btn" data-open="info-dialog">
+              <span class="avatar"><img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Floor Jansen"></span>
+              <span class="teacher__name">Floor<br>Jansen</span>
+              <span class="teacher__country">Denmark</span>
+            </button>
+          </li>
+        </ul>
+        <button type="button" class="carousel__arrow carousel__arrow--next" aria-label="Next"></button>
+      </div>
+    </section>
+
+    <section class="section about" id="about">
+      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. A atque facere, hic impedit itaque molestiae sit tempore? Ea in mollitia natus rerum voluptates. Ea ex excepturi facere tempora. Aliquid asperiores hic impedit iusto natus quaerat ratione sit? Culpa iusto optio voluptas voluptate. Enim eveniet fugit iure maiores molestiae, praesentium quia.</p>
+      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aliquam eligendi illum in inventore ipsum odio officiis omnis quisquam sed tempora?</p>
+      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. A atque esse expedita id iusto mollitia, odit sint ullam veritatis vero?</p>
+    </section>
+  </main>
+
+  <footer class="footer clearfix">
+    <ul class="nav__list">
+      <li><a href="#teachers">Teachers</a></li>
+      <li><a href="#statistics">Statistics</a></li>
+      <li><a href="#favorites">Favorites</a></li>
+      <li><a href="#about">About</a></li>
+    </ul>
+    <button type="button" class="btn nav__add" data-open="add-dialog">Add teacher</button>
+  </footer>
+</div>
+
+<dialog class="popup popup--add" id="add-dialog" aria-labelledby="add-title">
+  <header class="popup__header">
+    <h2 id="add-title">Add Teacher</h2>
+    <button type="button" class="popup__close" data-close aria-label="Close">&times;</button>
+  </header>
+  <form class="popup__body form" method="dialog">
+    <div class="form__row">
+      <label for="a-name">Name</label>
+      <input id="a-name" type="text" placeholder="Enter name" required>
+    </div>
+    <div class="form__row">
+      <label for="a-spec">Speciality</label>
+      <select id="a-spec">
+        <option>Mathematics</option><option>Physics</option><option>Chemistry</option>
+        <option>Biology</option><option>Chess</option><option>Art</option>
+      </select>
+    </div>
+    <div class="form__cols">
+      <div class="form__row">
+        <label for="a-country">Country</label>
+        <select id="a-country">
+          <option>Ukraine</option><option>Poland</option><option>Belgium</option><option>Denmark</option>
+        </select>
+      </div>
+      <div class="form__row">
+        <label for="a-city">City</label>
+        <input id="a-city" type="text">
+      </div>
+      <div class="form__row">
+        <label for="a-email">Email</label>
+        <input id="a-email" type="email">
+      </div>
+      <div class="form__row">
+        <label for="a-phone">Phone</label>
+        <input id="a-phone" type="tel">
+      </div>
+    </div>
+    <div class="form__row form__row--half">
+      <label for="a-dob">Date of birth</label>
+      <input id="a-dob" type="date">
+    </div>
+    <div class="form__inline">
+      <span class="form__label">Sex</span>
+      <label class="form__radio">Male <input type="radio" name="sex" value="m"></label>
+      <label class="form__radio">Female <input type="radio" name="sex" value="f"></label>
+    </div>
+    <div class="form__inline">
+      <label class="form__label" for="a-color">Background color</label>
+      <input id="a-color" type="color" value="#000000">
+    </div>
+    <div class="form__row">
+      <label for="a-notes">Notes (optional)</label>
+      <textarea id="a-notes" rows="5"></textarea>
+    </div>
+    <button type="submit" class="btn btn--block">Add</button>
+  </form>
+</dialog>
+
+<dialog class="popup popup--info" id="info-dialog" aria-labelledby="info-title">
+  <header class="popup__header">
+    <h2>Teacher Info</h2>
+    <button type="button" class="popup__close" data-close aria-label="Close">&times;</button>
+  </header>
+  <div class="popup__body info">
+    <div class="info__top">
+      <img class="info__photo" src="https://randomuser.me/api/portraits/men/32.jpg" alt="Ihor Tkachuk">
+      <div class="info__main">
+        <button type="button" class="info__star" aria-label="Toggle favorite" aria-pressed="false">&#9734;</button>
+        <h3 class="info__name" id="info-title">Ihor Tkachuk</h3>
+        <p class="info__subject">Chemistry</p>
+        <p>Kyiv, Ukraine</p>
+        <p>35, Male</p>
+        <p><a href="mailto:ihor_tkachuk@domain.com">ihor_tkachuk@domain.com</a></p>
+        <p>+380964993252</p>
+      </div>
+    </div>
+    <p class="info__notes">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ab autem consectetur culpa cumque, distinctio dolor dolore dolorem doloremque ea explicabo facilis nam nesciunt nisi pariatur perspiciatis porro quis similique temporibus veniam veritatis? A ab ad, aliquam amet consequatur cupiditate debitis deserunt doloribus dolorum earum eius eos minus nostrum odit omnis perferendis...</p>
+    <a href="#" class="info__map" data-toggle-map>toggle map</a>
+    <iframe class="info__mapframe" hidden title="Map" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=30.3,50.35,30.8,50.55&amp;layer=mapnik"></iframe>
+  </div>
+</dialog>
+
+<script src="js/main.js"></script>
+</body>
+</html>
