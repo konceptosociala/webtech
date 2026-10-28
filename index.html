@@ -61,11 +61,15 @@
       </form>
 
       <ul class="teachers" id="teacher-list"></ul>
-      <p class="empty" id="teacher-empty" hidden>No teachers match your filters.</p>
+      <p class="empty" id="teacher-status" role="status" hidden></p>
+      <div class="more">
+        <button type="button" class="btn" id="load-more">Next</button>
+      </div>
     </section>
 
     <section class="section" id="statistics">
       <h2 class="section__title">Statistics</h2>
+      <p class="stats-summary" id="stats-summary" role="status"></p>
 
       <div class="table-wrap">
         <table class="stats">
@@ -94,7 +98,7 @@
         <ul class="carousel__track" id="favorite-list"></ul>
         <button type="button" class="carousel__arrow carousel__arrow--next" aria-label="Next"></button>
       </div>
-      <p class="empty" id="favorite-empty" hidden>No favorite teachers yet. Open a teacher and click the star.</p>
+      <p class="empty" id="favorite-empty" hidden></p>
     </section>
 
     <section class="section about" id="about">
