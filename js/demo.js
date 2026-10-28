@@ -9,7 +9,10 @@ const users = formatUsers();
 show('1. formatted users', `${users.length} unique users`);
 show('1. first user', users[0]);
 
-show('2. validation', users.map((user) => ({ name: user.full_name, ...validateUser(user) })).filter((r) => !r.valid));
+show('2. validation', users
+  .map((user) => ({ name: user.full_name, ...validateUser(user) }))
+  .filter((r) => !r.valid)
+  .map(({ name, errors }) => ({ name, errors: errors.map(({ field, message }) => `${field} ${message}`) })));
 
 show('3. filter: Ireland / Male / age >= 30', filterUsers(users, { country: 'Ireland', gender: 'male', age: '>=30' }).map((u) => u.full_name));
 show('3. filter: favorites', filterUsers(users, { favorite: true }).map((u) => u.full_name));

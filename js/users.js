@@ -5,11 +5,12 @@ export const COURSES = [
   'Biology', 'Chemistry', 'Law', 'Art', 'Medicine', 'Statistics',
 ];
 
-const SORTABLE_FIELDS = ['full_name', 'age', 'b_day', 'country'];
+const SORTABLE_FIELDS = ['full_name', 'course', 'age', 'b_day', 'gender', 'country'];
 const FIELD_ALIASES = { b_day: 'b_date' };
 const CAPITALIZED_FIELDS = ['full_name', 'gender', 'note', 'state', 'city', 'country'];
 const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const AGE_CONDITION = /^(>=|<=|>|<|=)?\s*(\d+)$/;
+const AGE_RANGE = /^(\d+)\s*-\s*(\d+)$/;
 const DEFAULT_PHONE_FORMAT = /^\+?[\d\s\-().]{6,20}$/;
 const PHONE_FORMATS = {
   Germany: /^\d{4}-\d{7}$/,
@@ -103,23 +104,30 @@ const withDefaults = (user, index) => {
 export const formatUsers = (randomUsers = randomUserMock, extraUsers = additionalUsers) =>
   mergeUnique([...randomUsers.map(fromRandomUser), ...extraUsers.map(fromAdditionalUser)]).map(withDefaults);
 
-export const validateUser = (user) => {
-  const errors = [];
+export const createUser = (fields) =>
+  withDefaults(fromAdditionalUser({ id: `user-${Date.now()}`, ...fields }), 0);
 
-  CAPITALIZED_FIELDS.forEach((field) => {
-    if (!isCapitalizedString(user[field])) errors.push(`${field} must be a string starting with a capital letter`);
-  });
-  if (typeof user.age !== 'number' || !Number.isFinite(user.age)) errors.push('age must be a number');
-  if (typeof user.email !== 'string' || !EMAIL_FORMAT.test(user.email)) errors.push('email must be a valid email address');
+export const validateUser = (user, { optional = [] } = {}) => {
+  const errors = [];
+  const check = (field, isValid, message) => {
+    if (optional.includes(field) && user[field] == null) return;
+    if (!isValid) errors.push({ field, message });
+  };
+
+  CAPITALIZED_FIELDS.forEach((field) => check(field, isCapitalizedString(user[field]), 'must start with a capital letter'));
+  check('age', typeof user.age === 'number' && Number.isFinite(user.age), 'must be a number');
+  check('email', typeof user.email === 'string' && EMAIL_FORMAT.test(user.email), 'must be a valid email address');
 
   const phoneFormat = PHONE_FORMATS[user.country] ?? DEFAULT_PHONE_FORMAT;
-  if (typeof user.phone !== 'string' || !phoneFormat.test(user.phone)) errors.push(`phone does not match the format for ${user.country}`);
+  check('phone', typeof user.phone === 'string' && phoneFormat.test(user.phone), `does not match the format for ${user.country}`);
 
   return { valid: errors.length === 0, errors };
 };
 
 const matchesAge = (age, condition) => {
   if (typeof condition === 'number') return age === condition;
+  const range = String(condition).trim().match(AGE_RANGE);
+  if (range) return age >= Number(range[1]) && age <= Number(range[2]);
   const [, operator = '=', limit] = String(condition).trim().match(AGE_CONDITION) ?? [];
   if (limit === undefined) return false;
   const value = Number(limit);
@@ -132,12 +140,13 @@ const matchesAge = (age, condition) => {
   }[operator];
 };
 
-export const filterUsers = (users, { country, age, gender, favorite } = {}) =>
+export const filterUsers = (users, { country, age, gender, favorite, photo } = {}) =>
   users.filter((user) =>
     (country === undefined || user.country === country) &&
     (age === undefined || matchesAge(user.age, age)) &&
     (gender === undefined || user.gender?.toLowerCase() === gender.toLowerCase()) &&
-    (favorite === undefined || user.favorite === favorite));
+    (favorite === undefined || user.favorite === favorite) &&
+    (photo === undefined || Boolean(user.picture_large) === photo));
 
 const isMissing = (value) => value == null || Number.isNaN(value);
 
@@ -167,6 +176,13 @@ const matchesQuery = (user, { name, note, age }) =>
   (age === undefined || matchesAge(user.age, age));
 
 export const findUser = (users, query) => users.find((user) => matchesQuery(user, query));
+
+export const searchUsers = (users, text) => {
+  const query = String(text ?? '').trim();
+  if (!query) return users;
+  if (AGE_CONDITION.test(query) || AGE_RANGE.test(query)) return users.filter((user) => matchesAge(user.age, query));
+  return users.filter((user) => matchesQuery(user, { name: query }) || matchesQuery(user, { note: query }));
+};
 
 export const percentMatching = (users, query) => {
   if (users.length === 0) return 0;
