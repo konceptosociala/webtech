@@ -1,13 +1,25 @@
-import { COURSES, formatUsers, filterUsers, sortUsers, searchUsers, createUser, validateUser } from './users.js';
 import {
-  setOptions, renderTeacherList, renderStatsRows, renderSortState, renderPagination,
+  COURSES, formatUsers, mergeUsers, filterUsers, sortUsers, searchUsers, createUser, validateUser,
+} from './users.js';
+import { fetchRandomUsers, fetchSavedTeachers, saveTeacher } from './api.js';
+import {
+  setOptions, renderTeacherList, renderMessage, renderStatsRows, renderSortState, renderPagination,
   renderTeacherInfo, renderFavoriteStar, renderFormErrors,
 } from './view.js';
 
 const PAGE_SIZE = 10;
+const INITIAL_COUNT = 50;
+const NEXT_COUNT = 10;
+const MESSAGES = {
+  loading: 'Loading teachers…',
+  loadFailed: "Couldn't load teachers. Check your connection and try again.",
+  noMatches: 'No teachers match your filters.',
+  noFavorites: 'No favorite teachers yet. Open a teacher and click the star.',
+  saveFailed: "Couldn't save the teacher. Is json-server running (npm start)?",
+};
 const FORM_LABELS = {
   full_name: 'Name', course: 'Speciality', country: 'Country', city: 'City', email: 'Email',
-  phone: 'Phone', age: 'Date of birth', gender: 'Sex', note: 'Notes',
+  phone: 'Phone', age: 'Date of birth', gender: 'Sex', note: 'Notes', server: 'Server',
 };
 const FORM_INPUTS = { age: 'b_day' };
 
@@ -15,7 +27,9 @@ const dom = {
   searchForm: document.getElementById('search-form'),
   filters: document.getElementById('filters'),
   teacherList: document.getElementById('teacher-list'),
-  teacherEmpty: document.getElementById('teacher-empty'),
+  teacherStatus: document.getElementById('teacher-status'),
+  loadMore: document.getElementById('load-more'),
+  statsSummary: document.getElementById('stats-summary'),
   statsHeaders: document.querySelectorAll('.stats th[data-sort]'),
   statsBody: document.getElementById('stats-body'),
   pagination: document.getElementById('pagination'),
@@ -25,10 +39,15 @@ const dom = {
   addDialog: document.getElementById('add-dialog'),
   addForm: document.getElementById('add-form'),
   addErrors: document.getElementById('add-errors'),
+  addSubmit: document.querySelector('#add-form [type=submit]'),
 };
 
 const state = {
-  teachers: formatUsers(),
+  teachers: [],
+  rejected: 0,
+  apiPage: 0,
+  loading: false,
+  error: null,
   filters: {},
   search: '',
   sort: { field: 'full_name', order: 'asc' },
@@ -42,14 +61,29 @@ const visibleTeachers = () => searchUsers(filterUsers(state.teachers, state.filt
 
 // RENDERING
 
-const renderTeachers = (teachers) => renderTeacherList(dom.teacherList, dom.teacherEmpty, teachers);
+const teacherStatus = (count) => {
+  if (state.loading) return MESSAGES.loading;
+  if (state.error) return MESSAGES.loadFailed;
+  return count === 0 ? MESSAGES.noMatches : '';
+};
 
-const renderFavorites = () => renderTeacherList(
-  dom.favoriteList,
-  dom.favoriteEmpty,
-  state.teachers.filter((teacher) => teacher.favorite),
-  { showSubject: false },
-);
+const statsSummary = (count) => {
+  const summary = `Showing ${count} of ${state.teachers.length} teachers`;
+  return state.rejected ? `${summary} · ${state.rejected} skipped as invalid` : summary;
+};
+
+const renderTeachers = (teachers) => {
+  renderTeacherList(dom.teacherList, teachers);
+  renderMessage(dom.teacherStatus, teacherStatus(teachers.length));
+  dom.loadMore.disabled = state.loading;
+  dom.loadMore.textContent = state.loading ? 'Loading…' : 'Next';
+};
+
+const renderFavorites = () => {
+  const favorites = state.teachers.filter((teacher) => teacher.favorite);
+  renderTeacherList(dom.favoriteList, favorites, { showSubject: false });
+  renderMessage(dom.favoriteEmpty, favorites.length ? '' : MESSAGES.noFavorites);
+};
 
 const renderStats = (teachers) => {
   const sorted = sortUsers(teachers, state.sort.field, state.sort.order);
@@ -57,6 +91,7 @@ const renderStats = (teachers) => {
   state.page = Math.min(state.page, pageCount);
   const start = (state.page - 1) * PAGE_SIZE;
 
+  renderMessage(dom.statsSummary, statsSummary(teachers.length));
   renderStatsRows(dom.statsBody, sorted.slice(start, start + PAGE_SIZE));
   renderSortState(dom.statsHeaders, state.sort);
   renderPagination(dom.pagination, pageCount, state.page);
@@ -74,7 +109,59 @@ const render = () => {
   renderFavorites();
 };
 
-// TASK 1: TEACHER INFO & FAVORITES
+// DATA LOADING
+
+const addTeachers = (teachers) => {
+  state.teachers = mergeUsers(state.teachers, teachers);
+  renderCountryOptions();
+  updatePhoneHint();
+};
+
+const fetchValidTeachers = async ({ results, page }) => {
+  const users = formatUsers(await fetchRandomUsers({ results, page }), []);
+  const teachers = users.filter((user) => validateUser(user).valid);
+  const rejected = users.length - teachers.length;
+  if (rejected === 0) return { teachers, rejected };
+
+  const topUp = await fetchValidTeachers({ results: rejected, page });
+  return { teachers: [...teachers, ...topUp.teachers], rejected: rejected + topUp.rejected };
+};
+
+const loadNextPage = async () => {
+  const page = state.apiPage + 1;
+  const results = page === 1 ? INITIAL_COUNT : NEXT_COUNT;
+  const { teachers, rejected } = await fetchValidTeachers({ results, page });
+  addTeachers(teachers);
+  state.rejected += rejected;
+  state.apiPage = page;
+};
+
+const loadSavedTeachers = async () => {
+  try {
+    addTeachers(await fetchSavedTeachers());
+  } catch (error) {
+    console.warn('Saved teachers are unavailable (json-server is not running?)', error);
+  }
+};
+
+const runRequest = async (task) => {
+  state.loading = true;
+  state.error = null;
+  render();
+  try {
+    await task();
+  } catch (error) {
+    state.error = error;
+    console.error(error);
+  } finally {
+    state.loading = false;
+    render();
+  }
+};
+
+dom.loadMore.addEventListener('click', () => runRequest(loadNextPage));
+
+// TEACHER INFO & FAVORITES
 
 const openTeacherInfo = (id) => {
   const teacher = findTeacher(id);
@@ -123,7 +210,7 @@ const scrollFavorites = (direction) => {
 document.querySelector('.carousel__arrow--prev').addEventListener('click', () => scrollFavorites(-1));
 document.querySelector('.carousel__arrow--next').addEventListener('click', () => scrollFavorites(1));
 
-// TASK 2: FILTERS
+// FILTERS
 
 const readFilters = ({ elements }) => ({
   age: elements.age.value || undefined,
@@ -139,7 +226,7 @@ dom.filters.addEventListener('change', () => {
   render();
 });
 
-// TASK 3: SORTING & PAGINATION
+// SORTING & PAGINATION
 
 dom.statsHeaders.forEach((th) => {
   th.addEventListener('click', () => {
@@ -160,7 +247,7 @@ dom.pagination.addEventListener('click', (event) => {
   renderStats(visibleTeachers());
 });
 
-// TASK 4: SEARCH
+// SEARCH
 
 dom.searchForm.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -177,7 +264,7 @@ dom.searchForm.elements.query.addEventListener('input', (event) => {
   }
 });
 
-// TASK 5: ADD TEACHER FORM
+// ADD TEACHER FORM
 
 const updatePhoneHint = () => {
   const { country, phone } = dom.addForm.elements;
@@ -207,7 +294,7 @@ const resetAddForm = () => {
   updatePhoneHint();
 };
 
-dom.addForm.addEventListener('submit', (event) => {
+dom.addForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const teacher = createUser(readTeacherForm(dom.addForm));
   const { valid, errors } = validateUser(teacher, { optional: ['state'] });
@@ -218,11 +305,18 @@ dom.addForm.addEventListener('submit', (event) => {
     return;
   }
 
-  state.teachers.push(teacher);
-  renderCountryOptions();
-  render();
-  dom.addDialog.close();
-  resetAddForm();
+  dom.addSubmit.disabled = true;
+  try {
+    addTeachers([await saveTeacher(teacher)]);
+    render();
+    dom.addDialog.close();
+    resetAddForm();
+  } catch (error) {
+    console.error(error);
+    showFormErrors([{ field: 'server', message: MESSAGES.saveFailed }]);
+  } finally {
+    dom.addSubmit.disabled = false;
+  }
 });
 
 dom.addForm.elements.country.addEventListener('change', updatePhoneHint);
@@ -244,6 +338,4 @@ document.querySelectorAll('dialog').forEach((dialog) => {
 // INIT
 
 setOptions(dom.addForm.elements.course, COURSES);
-renderCountryOptions();
-updatePhoneHint();
-render();
+runRequest(() => Promise.all([loadNextPage(), loadSavedTeachers()]));

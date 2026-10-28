@@ -1,1 +1,9 @@
-{ "type": "module" }
+{
+  "type": "module",
+  "scripts": {
+    "start": "json-server db.json --static ."
+  },
+  "devDependencies": {
+    "json-server": "^1.0.0-beta.15"
+  }
+}

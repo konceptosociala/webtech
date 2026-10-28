@@ -45,9 +45,13 @@ const createCard = (teacher, { showSubject = true } = {}) => {
   return card;
 };
 
-export const renderTeacherList = (list, emptyMessage, teachers, options) => {
+export const renderTeacherList = (list, teachers, options) => {
   list.replaceChildren(...teachers.map((teacher) => createCard(teacher, options)));
-  emptyMessage.hidden = teachers.length > 0;
+};
+
+export const renderMessage = (element, text) => {
+  element.textContent = text;
+  element.hidden = !text;
 };
 
 const STAT_COLUMNS = [

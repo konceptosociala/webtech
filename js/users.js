@@ -19,10 +19,10 @@ const PHONE_FORMATS = {
   Denmark: /^\d{8}$/,
   Norway: /^\d{8}$/,
   Finland: /^0\d-\d{3}-\d{3}$/,
-  Netherlands: /^\(\d{3}\)-\d{3}-\d{4}$/,
+  Netherlands: /^\(\d{3}\)(-\d{3}-\d{4}| \d{7})$/,
   Spain: /^\d{3}-\d{3}-\d{3}$/,
   Switzerland: /^0\d{2} \d{3} \d{2} \d{2}$/,
-  'United States': /^\(\d{3}\)-\d{3}-\d{4}$/,
+  'United States': /^\(\d{3}\)[- ]\d{3}-\d{4}$/,
   Canada: /^\d{3}-\d{3}-\d{4}$/,
   Australia: /^0\d-\d{4}-\d{4}$/,
   'New Zealand': /^\(\d{3}\)-\d{3}-\d{4}$/,
@@ -100,6 +100,8 @@ const withDefaults = (user, index) => {
     note: user.note ?? `Teaches ${course}.`,
   };
 };
+
+export const mergeUsers = (...lists) => mergeUnique(lists.flat());
 
 export const formatUsers = (randomUsers = randomUserMock, extraUsers = additionalUsers) =>
   mergeUnique([...randomUsers.map(fromRandomUser), ...extraUsers.map(fromAdditionalUser)]).map(withDefaults);
