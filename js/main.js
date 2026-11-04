@@ -1,13 +1,13 @@
+import _ from 'lodash';
 import {
-  COURSES, formatUsers, mergeUsers, filterUsers, sortUsers, searchUsers, createUser, validateUser,
+  COURSES, formatUsers, mergeUsers, filterUsers, searchUsers, createUser, validateUser, countUsersBy,
 } from './users.js';
 import { fetchRandomUsers, fetchSavedTeachers, saveTeacher } from './api.js';
 import {
-  setOptions, renderTeacherList, renderMessage, renderStatsRows, renderSortState, renderPagination,
-  renderTeacherInfo, renderFavoriteStar, renderFormErrors,
+  setOptions, renderTeacherList, renderMessage, renderPressed, renderTeacherInfo, renderFavoriteStar, renderFormErrors,
 } from './view.js';
+import { createTeacherMap, renderPieChart, renderReport, MAX_SLICES } from './widgets.js';
 
-const PAGE_SIZE = 10;
 const INITIAL_COUNT = 50;
 const NEXT_COUNT = 10;
 const MESSAGES = {
@@ -29,13 +29,17 @@ const dom = {
   teacherList: document.getElementById('teacher-list'),
   teacherStatus: document.getElementById('teacher-status'),
   loadMore: document.getElementById('load-more'),
+  statsViews: document.getElementById('stats-views'),
   statsSummary: document.getElementById('stats-summary'),
-  statsHeaders: document.querySelectorAll('.stats th[data-sort]'),
-  statsBody: document.getElementById('stats-body'),
-  pagination: document.getElementById('pagination'),
+  chartPanel: document.getElementById('stats-chart-panel'),
+  chartGroups: document.getElementById('chart-groups'),
+  chart: document.getElementById('stats-chart'),
+  reportPanel: document.getElementById('stats-report-panel'),
+  report: document.getElementById('stats-report'),
   favoriteList: document.getElementById('favorite-list'),
   favoriteEmpty: document.getElementById('favorite-empty'),
   infoDialog: document.getElementById('info-dialog'),
+  infoMap: document.querySelector('#info-dialog .info__mapview'),
   addDialog: document.getElementById('add-dialog'),
   addForm: document.getElementById('add-form'),
   addErrors: document.getElementById('add-errors'),
@@ -50,13 +54,14 @@ const state = {
   error: null,
   filters: {},
   search: '',
-  sort: { field: 'full_name', order: 'asc' },
-  page: 1,
+  statsView: 'chart',
+  chartGroup: 'course',
   selectedId: null,
+  map: null,
 };
 
-const findTeacher = (id) => state.teachers.find((teacher) => teacher.id === id);
-const countries = () => [...new Set(state.teachers.map((t) => t.country).filter(Boolean))].sort();
+const findTeacher = (id) => _.find(state.teachers, { id });
+const countries = () => _(state.teachers).map('country').compact().uniq().sortBy().value();
 const visibleTeachers = () => searchUsers(filterUsers(state.teachers, state.filters), state.search);
 
 // RENDERING
@@ -68,7 +73,8 @@ const teacherStatus = (count) => {
 };
 
 const statsSummary = (count) => {
-  const summary = `Showing ${count} of ${state.teachers.length} teachers`;
+  const total = state.teachers.length;
+  const summary = state.statsView === 'chart' ? `Showing ${count} of ${total} teachers` : `All ${total} loaded teachers`;
   return state.rejected ? `${summary} · ${state.rejected} skipped as invalid` : summary;
 };
 
@@ -86,15 +92,15 @@ const renderFavorites = () => {
 };
 
 const renderStats = (teachers) => {
-  const sorted = sortUsers(teachers, state.sort.field, state.sort.order);
-  const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
-  state.page = Math.min(state.page, pageCount);
-  const start = (state.page - 1) * PAGE_SIZE;
-
+  const showChart = state.statsView === 'chart';
   renderMessage(dom.statsSummary, statsSummary(teachers.length));
-  renderStatsRows(dom.statsBody, sorted.slice(start, start + PAGE_SIZE));
-  renderSortState(dom.statsHeaders, state.sort);
-  renderPagination(dom.pagination, pageCount, state.page);
+  renderPressed(dom.statsViews, state.statsView);
+  renderPressed(dom.chartGroups, state.chartGroup);
+  dom.chartPanel.hidden = !showChart;
+  dom.reportPanel.hidden = showChart;
+
+  if (showChart) renderPieChart(dom.chart, countUsersBy(teachers, state.chartGroup, MAX_SLICES));
+  else renderReport(dom.report, state.statsView, state.teachers);
 };
 
 const renderCountryOptions = () => {
@@ -192,14 +198,17 @@ dom.infoDialog.addEventListener('click', (event) => {
 
   if (action === 'toggle-map') {
     event.preventDefault();
-    const frame = dom.infoDialog.querySelector('.info__mapframe');
-    if (!frame.src) frame.src = frame.dataset.src;
-    frame.hidden = !frame.hidden;
+    dom.infoMap.hidden = !dom.infoMap.hidden;
+    if (dom.infoMap.hidden) return;
+    const teacher = findTeacher(state.selectedId);
+    state.map ??= createTeacherMap(dom.infoMap, teacher.coordinates, teacher.full_name);
+    state.map.invalidateSize();
   }
 });
 
 dom.infoDialog.addEventListener('close', () => {
-  dom.infoDialog.querySelector('.info__mapframe').removeAttribute('src');
+  state.map?.remove();
+  state.map = null;
 });
 
 const scrollFavorites = (direction) => {
@@ -222,37 +231,28 @@ const readFilters = ({ elements }) => ({
 
 dom.filters.addEventListener('change', () => {
   state.filters = readFilters(dom.filters);
-  state.page = 1;
   render();
 });
 
-// SORTING & PAGINATION
+// STATISTICS
 
-dom.statsHeaders.forEach((th) => {
-  th.addEventListener('click', () => {
-    const { field, order } = state.sort;
-    state.sort = {
-      field: th.dataset.sort,
-      order: field === th.dataset.sort && order === 'asc' ? 'desc' : 'asc',
-    };
+const onToggle = (group, key) => {
+  group.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-value]');
+    if (!button) return;
+    state[key] = button.dataset.value;
     renderStats(visibleTeachers());
   });
-});
+};
 
-dom.pagination.addEventListener('click', (event) => {
-  const link = event.target.closest('[data-page]');
-  if (!link) return;
-  event.preventDefault();
-  state.page = Number(link.dataset.page);
-  renderStats(visibleTeachers());
-});
+onToggle(dom.statsViews, 'statsView');
+onToggle(dom.chartGroups, 'chartGroup');
 
 // SEARCH
 
 dom.searchForm.addEventListener('submit', (event) => {
   event.preventDefault();
   state.search = dom.searchForm.elements.query.value;
-  state.page = 1;
   render();
   document.getElementById('teachers').scrollIntoView();
 });
@@ -268,7 +268,7 @@ dom.searchForm.elements.query.addEventListener('input', (event) => {
 
 const updatePhoneHint = () => {
   const { country, phone } = dom.addForm.elements;
-  phone.placeholder = state.teachers.find((t) => t.country === country.value && t.phone)?.phone ?? '';
+  phone.placeholder = _.find(state.teachers, (t) => t.country === country.value && t.phone)?.phone ?? '';
 };
 
 const readTeacherForm = (form) =>

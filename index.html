@@ -7,7 +7,23 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=PT+Sans:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="node_modules/leaflet/dist/leaflet.css">
+  <link rel="stylesheet" href="node_modules/@webdatarocks/webdatarocks/webdatarocks.min.css">
   <link rel="stylesheet" href="css/style.css">
+
+  <script src="node_modules/lodash/lodash.min.js"></script>
+  <script src="node_modules/dayjs/dayjs.min.js"></script>
+  <script src="node_modules/leaflet/dist/leaflet.js"></script>
+  <script src="node_modules/chart.js/dist/chart.umd.min.js"></script>
+  <script src="node_modules/@webdatarocks/webdatarocks/webdatarocks.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "lodash": "./js/vendor/lodash.js",
+        "dayjs": "./js/vendor/dayjs.js"
+      }
+    }
+  </script>
 </head>
 <body>
 <div class="page">
@@ -69,25 +85,29 @@
 
     <section class="section" id="statistics">
       <h2 class="section__title">Statistics</h2>
+      <div class="toggles toggles--center" id="stats-views" aria-label="Statistics view">
+        <button type="button" class="toggles__btn" data-value="chart" aria-pressed="true">Chart</button>
+        <button type="button" class="toggles__btn" data-value="countries" aria-pressed="false">By country</button>
+        <button type="button" class="toggles__btn" data-value="teachers" aria-pressed="false">All teachers</button>
+      </div>
       <p class="stats-summary" id="stats-summary" role="status"></p>
 
-      <div class="table-wrap">
-        <table class="stats">
-          <thead>
-            <tr>
-              <th scope="col" data-sort="full_name">Name</th>
-              <th scope="col" data-sort="course">Speciality</th>
-              <th scope="col" data-sort="age">Age</th>
-              <th scope="col" data-sort="b_day">Birthday</th>
-              <th scope="col" data-sort="gender">Gender</th>
-              <th scope="col" data-sort="country">Nationality</th>
-            </tr>
-          </thead>
-          <tbody id="stats-body"></tbody>
-        </table>
+      <div class="stats-panel" id="stats-chart-panel">
+        <div class="toggles toggles--center" id="chart-groups" aria-label="Group teachers by">
+          <span class="toggles__label">Group by</span>
+          <button type="button" class="toggles__btn" data-value="course" aria-pressed="true">Speciality</button>
+          <button type="button" class="toggles__btn" data-value="age" aria-pressed="false">Age</button>
+          <button type="button" class="toggles__btn" data-value="gender" aria-pressed="false">Gender</button>
+          <button type="button" class="toggles__btn" data-value="country" aria-pressed="false">Nationality</button>
+        </div>
+        <div class="chart">
+          <canvas id="stats-chart" role="img" aria-label="Pie chart of the teachers shown above"></canvas>
+        </div>
       </div>
 
-      <ul class="pagination" id="pagination"></ul>
+      <div class="stats-panel" id="stats-report-panel" hidden>
+        <div class="report" id="stats-report"></div>
+      </div>
     </section>
 
     <section class="section" id="favorites">
@@ -190,11 +210,12 @@
         <p data-field="age-gender"></p>
         <p><a data-field="email" href=""></a></p>
         <p data-field="phone"></p>
+        <p class="info__birthday" data-field="birthday"></p>
       </div>
     </div>
     <p class="info__notes" data-field="note"></p>
     <a href="#" class="info__map" data-action="toggle-map">toggle map</a>
-    <iframe class="info__mapframe" hidden title="Map" loading="lazy"></iframe>
+    <div class="info__mapview" hidden></div>
   </div>
 </dialog>
 
