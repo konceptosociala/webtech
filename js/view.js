@@ -1,9 +1,9 @@
+import { nextBirthday } from './users.js';
+
 const cardTemplate = document.getElementById('teacher-card');
 
 export const initials = (fullName = '') =>
   fullName.split(/\s+/).filter(Boolean).map((part) => part[0].toUpperCase()).join('.');
-
-const formatDate = (iso) => (iso ? new Date(iso).toLocaleDateString('en-GB') : '');
 
 export const setOptions = (select, values, placeholder) => {
   const current = select.value;
@@ -54,57 +54,18 @@ export const renderMessage = (element, text) => {
   element.hidden = !text;
 };
 
-const STAT_COLUMNS = [
-  (t) => t.full_name,
-  (t) => t.course,
-  (t) => t.age ?? '',
-  (t) => formatDate(t.b_date),
-  (t) => t.gender,
-  (t) => t.country ?? '',
-];
-
-export const renderStatsRows = (tbody, teachers) => {
-  tbody.replaceChildren();
-  teachers.forEach((teacher) => {
-    const row = tbody.insertRow();
-    STAT_COLUMNS.forEach((value) => { row.insertCell().textContent = value(teacher); });
+export const renderPressed = (group, value) => {
+  group.querySelectorAll('[data-value]').forEach((button) => {
+    button.setAttribute('aria-pressed', String(button.dataset.value === value));
   });
 };
 
-export const renderSortState = (headers, { field, order }) => {
-  headers.forEach((th) => {
-    if (th.dataset.sort === field) th.setAttribute('aria-sort', order === 'asc' ? 'ascending' : 'descending');
-    else th.removeAttribute('aria-sort');
-  });
-};
-
-export const renderPagination = (list, pageCount, currentPage) => {
-  const items = Array.from({ length: pageCount }, (_, index) => {
-    const page = index + 1;
-    const item = document.createElement('li');
-    const control = document.createElement(page === currentPage ? 'span' : 'a');
-    control.textContent = page;
-    if (page === currentPage) {
-      control.className = 'pagination__current';
-    } else {
-      control.href = '#statistics';
-      control.dataset.page = page;
-    }
-    item.append(control);
-    return item;
-  });
-  list.replaceChildren(...items);
-};
-
-const mapUrl = ({ latitude, longitude }) => {
-  const [lat, lon] = [Number(latitude), Number(longitude)];
-  const delta = 0.2;
-  const params = new URLSearchParams({
-    bbox: [lon - delta, lat - delta, lon + delta, lat + delta].join(','),
-    layer: 'mapnik',
-    marker: `${lat},${lon}`,
-  });
-  return `https://www.openstreetmap.org/export/embed.html?${params}`;
+const birthdayText = (birthday) => {
+  if (!birthday) return '';
+  const date = birthday.date.format('D MMMM');
+  if (birthday.days === 0) return `Birthday: today, ${date}!`;
+  if (birthday.days === 1) return `Birthday: tomorrow, ${date}`;
+  return `Birthday: ${date}, in ${birthday.days} days`;
 };
 
 export const renderTeacherInfo = (dialog, teacher) => {
@@ -125,15 +86,13 @@ export const renderTeacherInfo = (dialog, teacher) => {
   field('email').textContent = teacher.email ?? '';
   field('email').href = teacher.email ? `mailto:${teacher.email}` : '';
   field('phone').textContent = teacher.phone ?? '';
+  field('birthday').textContent = birthdayText(nextBirthday(teacher.b_date));
   field('note').textContent = teacher.note ?? '';
 
   renderFavoriteStar(dialog.querySelector('[data-action="toggle-favorite"]'), teacher.favorite);
 
-  const mapLink = dialog.querySelector('[data-action="toggle-map"]');
-  const mapFrame = dialog.querySelector('.info__mapframe');
-  mapLink.hidden = !teacher.coordinates;
-  mapFrame.hidden = true;
-  mapFrame.dataset.src = teacher.coordinates ? mapUrl(teacher.coordinates) : '';
+  dialog.querySelector('[data-action="toggle-map"]').hidden = !teacher.coordinates;
+  dialog.querySelector('.info__mapview').hidden = true;
 };
 
 export const renderFavoriteStar = (star, isFavorite) => {
