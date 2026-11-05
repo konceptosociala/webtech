@@ -1,0 +1,36 @@
+.day {
+  font-size: 13px;
+  color: #444;
+}
+
+.day p { margin: 0 0 4px; }
+
+.day__title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 400;
+  color: #2f80ed;
+}
+
+.day__summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+  margin-bottom: 8px !important;
+}
+
+.day__icon { font-size: 40px; line-height: 1; }
+
+.day__wind {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 12px !important;
+}
+
+.day__arrow { display: inline-block; font-size: 18px; font-weight: 700; }
+
+.day__details { margin: 0; }
+.day__details dt { font-weight: 700; }
+.day__details dd { margin: 0 0 8px; }
